@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  name          String
+  tasks         Task[]         @relation("UserTasks")
+  comments      Comment[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  notifications Notification[]
+}
+
+model Task {
+  id           String       @id @default(uuid())
+  title        String
+  description  String
+  dueDate      DateTime
+  status       TaskStatus
+  priority     TaskPriority @default(MEDIUM)
+  userId       String
+  user         User         @relation("UserTasks", fields: [userId], references: [id], onDelete: Cascade)
+  subtasks     Task[]       @relation("Subtasks")
+  parentTask   Task?        @relation("Subtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  parentTaskId String?
+  tags         TaskTag[]
+  comments     Comment[]
+  attachments  Attachment[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId])
+}
+
+model TaskTag {
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+  @@index([tagId])
+}
+
+model Tag {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  taskTags TaskTag[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  url       String
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  message   String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+enum TaskStatus {
+  COMPLETED
+  IN_PROGRESS
+  PENDING
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}

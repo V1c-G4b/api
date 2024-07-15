@@ -1,0 +1,9 @@
+{
+  "include": ["src/**/*", "@types/*.d.ts", "src/utils/error.handler.ts"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
